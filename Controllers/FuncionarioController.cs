@@ -2,86 +2,99 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using _15.Models;
 using _15.Services;
+using _15.View;
 
 namespace _15.Controllers
 {
     public class FuncionarioController
     {
-        private readonly FuncionarioService _funcionarioService;
+        private readonly FuncionarioService _service;
+        private readonly FuncionarioView _view;
 
-        public FuncionarioController(FuncionarioService funcionarioService)
+        public FuncionarioController(FuncionarioService funcionarioService, FuncionarioView view)
         {
-            _funcionarioService = funcionarioService;
+            _service = funcionarioService;
+            _view = view;
         }
         public void Iniciar()
         {
             bool sair = false;
             while (!sair)
             {
-                ExibirMenu();
-                int op = LerOpcao();
+                _view.ExibirMenu();
+                int op = _view.LerOpcao();
 
                 switch (op)
                 {
                     case 1:
-                        _funcionarioService.AdicionarFuncionario();
+                        string nome = _view.PedirNome();
+                        double salario = _view.PedirSalario();
+                        string cargo = _view.PedirCargo();
+                        _service.AdicionarFuncionario(nome, salario, cargo);
+                        _view.ExibirMsg($"Funcionário {nome} adicionado com sucesso.");
                         break;
                     case 2:
-                        _funcionarioService.ListarFuncionarios();
+                        List<Funcionario> funcionarios = _service.ListarFuncionarios();
+                        if (funcionarios.Any())
+                        {
+                            _view.ListarFuncionarios(funcionarios);
+                        }
+                        else
+                        {
+                            _view.ExibirMsg($"Nenhum funcionário cadastrado.");
+                        }
                         break;
                     case 3:
-                        _funcionarioService.ListarFuncionariosCargo();
+                        cargo = _view.PedirCargo();
+                        funcionarios = _service.ListarFuncionariosCargo(cargo);
+
+                        if (funcionarios.Any())
+                        {
+                            _view.ListarFuncionarios(funcionarios);
+                        }
+                        else
+                        {
+                            _view.ExibirMsg($"Nenhum funcionário cadastrado com o cargo '{cargo}'.");
+                        }
                         break;
                     case 4:
-                        _funcionarioService.DeletarFuncionario();
+                        nome = _view.PedirNome();
+                        
+                        _service.DeletarFuncionario(nome);
+                        _view.ExibirMsg($"Funcionário {nome} removido com sucesso!");
+                        
                         break;
                     case 5:
-                        _funcionarioService.AumentarSalario();
+                        nome = _view.PedirNome();
+                        double porcentagem = _view.PedirPorcentagem();
+                        double salarioAtualizado = _service.AumentarSalario(nome, porcentagem);
+                        _view.ExibirMsg($"Novo salário: {salarioAtualizado} reais.");
                         break;
                     case 6:
-                        _funcionarioService.CalcularMediaSalarioCargo();
+                        cargo = _view.PedirCargo();
+                        double mediaSalarioCargo = _service.CalcularMediaSalarioCargo(cargo);
+                        _view.ExibirMsg($"A média salárial do cargo de {cargo} é: {mediaSalarioCargo} reais.");
                         break;
                     case 7:
+                        _view.ExibirMsg("Saindo do programa...");
                         sair = true;
-                        Console.WriteLine("Saindo do programa. Até mais!");
+                        
                         break;
                     default:
-                        Console.WriteLine("Opção inválida. Tente novamente.");
+                        _view.ExibirMsg("Opção inválida. Tente novamente.");
                         break;
                 }
 
                 if (!sair)
                 {
-                    Console.WriteLine("\nPressione qualquer tecla para continuar...");
-                    Console.ReadKey();
-                    Console.Clear();
+                    _view.PausarELimparTela();
                 }
             }
         }
 
-        private void ExibirMenu()
-        {
-            Console.WriteLine("\n--- Menu do Banco ---");
-            Console.WriteLine("[1] - Adicionar Funcionário");
-            Console.WriteLine("[2] - Listar Funcionários");
-            Console.WriteLine("[3] - Listar Funcionários por Cargo");
-            Console.WriteLine("[4] - Deletar Funcionário");
-            Console.WriteLine("[5] - Aumentar Salário (por nome)");
-            Console.WriteLine("[6] - Calcular Média Salarial por Cargo");
-            Console.WriteLine("[7] - Sair");
-            Console.Write("Escolha uma opção: ");
-        }
 
-        private int LerOpcao()
-        {
-            string? inputOp = Console.ReadLine();
-            if (int.TryParse(inputOp, out int op))
-            {
-                return op;
-            }
-            Console.WriteLine("Entrada inválida. Por favor, digite um número.");
-            return -1;
-        }
+        
     }
 }
